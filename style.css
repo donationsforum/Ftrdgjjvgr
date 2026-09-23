@@ -1,0 +1,753 @@
+/* ==========================================================================
+   Dot Connect — styles
+
+   Design idea: a sheet of paper on a desk, played with felt-tip pens.
+   All colours, fonts and sizes you are likely to tweak live in :root.
+
+   Layout modes
+   - Wide (default): board on the left, players and setup on the right.
+   - Compact (phones, small tablets, short windows): everything fits the
+     screen with no page scrolling. The board takes whatever space is left,
+     players become a slim strip, and setup moves into a bottom sheet.
+       * Portrait:  header / status / board / players stacked.
+       * Landscape: board on the left, header + players on the right.
+   The compact breakpoint below must match CONFIG.compactQuery in game.js:
+       (max-width: 880px), (max-height: 560px)
+   ========================================================================== */
+
+:root {
+  /* Player pen colours. Index matches player number minus one.
+     (To support more than four players, add another --player-N here,
+     a matching .p-N rule below, and update game.js.) */
+  --player-0: #d6246e;   /* magenta   */
+  --player-1: #2b4fd8;   /* ultramarine */
+  --player-2: #d05a00;   /* tangerine */
+  --player-3: #0f8a6b;   /* teal green */
+
+  /* Surfaces and text */
+  --desk: #e6ebf0;
+  --sheet: #fbfcfd;
+  --ink: #1b2433;
+  --ink-soft: #55607a;
+  --dot-empty: #9aa6b8;
+
+  --font: "Avenir Next", "Segoe UI Variable", "Segoe UI", system-ui,
+          -apple-system, "Helvetica Neue", Arial, sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--desk);
+  color: var(--ink);
+  font-family: var(--font);
+  line-height: 1.45;
+  -webkit-tap-highlight-color: transparent;
+}
+
+[hidden] { display: none !important; }
+
+:focus-visible {
+  outline: 3px solid var(--player-1);
+  outline-offset: 3px;
+}
+
+/* Every tappable control: no double-tap-zoom delay, but pinch-zoom still works. */
+button, select, label, .board { touch-action: manipulation; }
+
+/* Player colour hook: any element with .p-N gets --pc set to that pen colour. */
+.p-0 { --pc: var(--player-0); }
+.p-1 { --pc: var(--player-1); }
+.p-2 { --pc: var(--player-2); }
+.p-3 { --pc: var(--player-3); }
+
+/* ---------- Page layout (wide) ---------- */
+
+.app {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: clamp(16px, 3.5vw, 40px);
+}
+
+.masthead {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: clamp(18px, 3vw, 32px);
+}
+
+.brand { min-width: 0; flex: 1; }
+
+.logo { width: 56px; height: 56px; flex: none; }
+.logo-line  { stroke: var(--player-0); stroke-width: 7; stroke-linecap: round; opacity: .55; }
+.logo-dot   { fill: var(--player-0); }
+.logo-empty { fill: var(--dot-empty); }
+
+.masthead h1 {
+  margin: 0;
+  font-size: clamp(1.9rem, 4.5vw, 2.8rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.tagline {
+  margin: 0.4rem 0 0;
+  max-width: 48ch;
+  color: var(--ink-soft);
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
+  gap: clamp(24px, 4vw, 48px);
+  align-items: start;
+}
+
+/* ---------- Status bar ---------- */
+
+.stage-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 20px;
+  margin-bottom: 16px;
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 5px 18px 5px 5px;
+  border: 2px solid var(--pc, var(--ink));
+  border-radius: 999px;
+  background: var(--sheet);
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.status .swatch {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--pc);
+  color: #fff;
+  font-weight: 800;
+}
+
+.status[data-mode="win"]  { background: var(--pc); color: #fff; }
+.status[data-mode="win"] .swatch { background: #fff; color: var(--pc); }
+.status[data-mode="draw"] { padding-left: 18px; }
+.status[data-mode="draw"] .swatch { display: none; }
+
+.goal { margin: 0; color: var(--ink-soft); }
+.goal strong { color: var(--ink); font-size: 1.3rem; }
+.aim-hint { color: var(--ink); font-weight: 700; }
+
+.chip-button {
+  min-height: 44px;
+  padding: 0 20px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--sheet);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.chip-button:active { transform: translateY(1px); }
+
+/* ---------- The sheet and board ---------- */
+
+/* .sheet is always an exact square: the paper the dots are drawn on. */
+.sheet {
+  width: min(100%, max(320px, calc(100vh - 290px)));
+  aspect-ratio: 1;
+  margin: 0 auto;
+  padding: clamp(6px, 2vw, 16px);
+  border: 2px solid var(--ink);
+  border-radius: 6px;
+  background: var(--sheet);
+  box-shadow: 6px 6px 0 var(--ink);
+}
+
+.board {
+  display: block;
+  width: 100%;
+  height: 100%;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Dots. Each dot's invisible .hit square fills its whole grid cell, so a tap
+   anywhere in the cell counts, and there are no dead zones between dots. */
+.dot { cursor: pointer; outline: none; }
+.dot.owned { cursor: default; }
+
+.dot .hit  { fill: transparent; }
+.dot .ring { fill: none; stroke: transparent; stroke-width: 3; }
+.dot:focus-visible .ring { stroke: var(--ink); stroke-dasharray: 5 4; }
+
+.dot .core {
+  fill: var(--dot-empty);
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform 0.15s ease-out, opacity 0.15s, fill 0.15s;
+}
+
+/* Preview of the current player's colour. It shows while pressing (touch),
+   hovering (mouse, only on devices that really hover) or focusing (keyboard).
+   --turn-color is set on the board by game.js. */
+.dot.empty:active .core,
+.dot.empty:focus-visible .core {
+  fill: var(--turn-color);
+  opacity: 0.45;
+  transform: scale(2.6);
+}
+@media (hover: hover) {
+  .dot.empty:hover .core {
+    fill: var(--turn-color);
+    opacity: 0.45;
+    transform: scale(2.6);
+  }
+}
+
+/* Two-step placement: the dot you have "aimed" at, waiting for a second tap */
+.dot.aiming .core {
+  fill: var(--turn-color);
+  opacity: 0.6;
+  transform: scale(3.4);
+}
+.dot.aiming .ring {
+  stroke: var(--turn-color);
+  stroke-width: 4;
+  animation: aim-pulse 1s ease-in-out infinite;
+}
+
+.dot.owned .core {
+  fill: var(--pc);
+  animation: pop 0.28s cubic-bezier(0.2, 1.6, 0.4, 1);
+}
+
+.dot .label {
+  fill: #fff;
+  font-family: var(--font);
+  font-size: 20px;
+  font-weight: 800;
+  text-anchor: middle;
+  pointer-events: none;
+}
+
+/* Lines between a player's neighbouring dots. Multiply blending makes
+   overlapping pens darken, like real felt-tips. */
+.seg {
+  stroke: var(--pc);
+  stroke-width: 9;
+  stroke-linecap: round;
+  opacity: 0.6;
+  mix-blend-mode: multiply;
+  animation: fade-in 0.25s ease-out;
+}
+
+/* The winning line: drawn on once, then the dots pulse. */
+.win-line {
+  stroke: var(--pc);
+  stroke-width: 16;
+  stroke-linecap: round;
+  opacity: 0.9;
+  stroke-dasharray: var(--len);
+  animation: draw 0.7s ease-out both;
+}
+
+.dot.win .core {
+  stroke: #fff;
+  stroke-width: 3;
+  animation: pulse 0.6s ease-in-out 0.5s 2;
+}
+
+/* Game over: calm everything that is not part of the win */
+.board.over .dot.empty { pointer-events: none; }
+.board.over .dot:not(.win) .core { opacity: 0.5; }
+.board.over .seg { opacity: 0.25; }
+
+/* ---------- Sidebar ---------- */
+
+.side { display: grid; gap: 28px; }
+
+.side section {
+  padding-top: 12px;
+  border-top: 2px solid var(--ink);
+}
+
+.side h2 {
+  margin: 0 0 12px;
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.player-list {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.player {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.player.active { border-color: var(--pc); background: var(--sheet); }
+.player.winner { border-color: var(--pc); background: var(--pc); color: #fff; }
+
+.player .badge {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--pc);
+  color: #fff;
+  font-weight: 800;
+}
+.player.winner .badge { background: #fff; color: var(--pc); }
+
+.player .name { font-weight: 700; }
+
+/* Pips show each player's longest line so far, out of the number needed.
+   On small screens a compact "2/4" count replaces them. */
+.pips { display: flex; gap: 5px; }
+.pip {
+  width: 10px;
+  height: 10px;
+  border: 2px solid var(--pc);
+  border-radius: 50%;
+}
+.pip.on { background: var(--pc); }
+.player.winner .pip { border-color: #fff; }
+.player.winner .pip.on { background: #fff; }
+
+.count {
+  display: none;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Setup controls */
+.setup-head { display: block; }
+.control { min-width: 0; margin: 0 0 16px; padding: 0; border: 0; }
+.control legend,
+.control label { display: block; margin-bottom: 6px; padding: 0; font-weight: 600; }
+
+.segmented {
+  display: inline-flex;
+  overflow: hidden;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--sheet);
+}
+.segmented label { position: relative; margin: 0; }
+.segmented input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.segmented span {
+  display: block;
+  min-width: 3.2em;
+  padding: 0.5em 1.1em;
+  font-weight: 700;
+  text-align: center;
+}
+.segmented input:checked + span { background: var(--ink); color: var(--sheet); }
+.segmented input:focus-visible + span { outline: 3px solid var(--player-1); outline-offset: -3px; }
+
+/* 16px+ text stops iOS Safari zooming the page when a select is opened */
+select {
+  width: 100%;
+  padding: 0.55em 0.8em;
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  background: var(--sheet);
+  color: inherit;
+  font: inherit;
+  font-size: max(1rem, 16px);
+}
+
+.primary {
+  width: 100%;
+  padding: 0.7em 1.4em;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--sheet);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.primary:hover  { background: #2c3b55; }
+.primary:active { transform: translateY(1px); }
+
+.hint { margin: 8px 0 0; color: var(--ink-soft); font-size: 0.9rem; }
+
+.rules { margin-top: 28px; padding-top: 12px; border-top: 2px solid var(--ink); }
+.rules summary { cursor: pointer; font-size: 1.1rem; font-weight: 800; letter-spacing: -0.01em; }
+.rules ol { margin: 10px 0 0; padding-left: 1.3em; color: var(--ink-soft); }
+.rules li + li { margin-top: 6px; }
+
+/* Shown by index.html only if game.js fails to start */
+.boot-error {
+  margin: 0 0 12px;
+  padding: 12px 16px;
+  border: 2px solid var(--player-0);
+  border-radius: 10px;
+  background: var(--sheet);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+/* Visually hidden but still read by screen readers */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Things that only exist on small screens or touch screens */
+.icon-button,
+.backdrop { display: none; }
+.touch-only { display: none; }
+@media (pointer: coarse) { .touch-only { display: block; } }
+
+.icon-button {
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  gap: 8px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--sheet);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.icon-button .icon {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+.icon-button:active { transform: translateY(1px); }
+
+/* The sound toggle is icon-only and shown at every screen size (the setup
+   button above it is compact-screens-only, via the .icon-button rule). */
+.sound-button {
+  display: inline-flex;
+  width: 44px;
+  padding: 0;
+}
+.sound-icon .speaker { fill: currentColor; stroke: none; }
+.sound-icon .mute-x { display: none; stroke: var(--ink); }
+.sound-button[aria-pressed="true"] .sound-icon .wave { display: none; }
+.sound-button[aria-pressed="true"] .sound-icon .mute-x { display: block; }
+
+/* ==========================================================================
+   COMPACT MODE: phones, small tablets and short windows
+   Keep this query in sync with CONFIG.compactQuery in game.js.
+   ========================================================================== */
+
+@media (max-width: 880px), (max-height: 560px) {
+
+  html, body { overscroll-behavior: none; }
+
+  /* --- Fill the screen: header / stage / players, no page scroll --- */
+  .app {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: none;
+    height: 100vh;               /* fallback */
+    height: 100dvh;              /* excludes the mobile browser toolbars */
+    margin: 0;
+    padding: max(12px, env(safe-area-inset-top))
+             max(12px, env(safe-area-inset-right))
+             max(12px, env(safe-area-inset-bottom))
+             max(12px, env(safe-area-inset-left));
+  }
+
+  .masthead { flex: none; gap: 10px; margin: 0; }
+  .logo { width: 34px; height: 34px; }
+  .masthead h1 { font-size: 1.5rem; }
+  .tagline { display: none; }
+
+  .icon-button { display: inline-flex; }
+
+  .layout {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: stretch;        /* wide layout uses align-items: start */
+    gap: 10px;
+    min-height: 0;
+  }
+
+  .stage {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 0;
+  }
+
+  /* --- Status row --- */
+  .stage-head { flex: none; flex-wrap: nowrap; gap: 8px 12px; min-height: 44px; margin: 0; }
+  .status { flex: 0 0 auto; min-height: 42px; padding: 4px 14px 4px 4px; font-size: 1rem; white-space: nowrap; }
+  .status .swatch { width: 32px; height: 32px; }
+  .goal { flex: none; font-size: 0.9rem; white-space: nowrap; }
+  .goal strong { font-size: 1.15rem; }
+
+  /* --- The board takes all remaining space and stays a perfect square.
+         .board-area is a size container, so the sheet can be sized in
+         container units: the largest square that fits both ways. --- */
+  .board-area {
+    display: grid;
+    flex: 1;
+    place-items: center;
+    min-height: 0;
+    padding: 0 4px 4px 0;        /* room for the sheet's offset shadow */
+    container-type: size;
+  }
+  .sheet {
+    width: min(100cqw, 100cqh);
+    margin: 0;
+    padding: 6px;
+    box-shadow: 4px 4px 0 var(--ink);
+  }
+  @supports not (width: 1cqw) {
+    .sheet { width: min(100%, 55vh); }
+  }
+
+  /* --- Players: one slim strip --- */
+  .side { display: block; flex: none; }
+  .side .players { padding: 0; border: 0; }
+  .players h2 {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .player-list { display: flex; gap: 6px; }
+  .player {
+    flex: 1 1 0;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    justify-content: center;
+    gap: 8px;
+    min-width: 0;
+    padding: 5px 8px;
+    overflow: hidden;            /* a chip may never widen the page */
+    border-radius: 12px;
+    background: rgba(251, 252, 253, 0.55);
+  }
+  .player.active { background: var(--sheet); }
+  .player.winner { background: var(--pc); }
+  .player .badge { width: 30px; height: 30px; }
+  .pips { display: none; }
+  .count { display: block; }
+
+  /* --- Setup becomes a bottom sheet with a dimmed backdrop --- */
+  .backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 19;
+    display: block;
+    background: rgba(27, 36, 51, 0.5);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s, visibility 0s linear 0.2s;
+  }
+  .backdrop.show { opacity: 1; visibility: visible; transition-delay: 0s; }
+
+  .side .setup {
+    position: fixed;
+    z-index: 20;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 14px;
+    width: min(100%, 560px);
+    max-height: calc(100vh - 12px);
+    max-height: calc(100dvh - 12px);
+    margin: 0 auto;
+    padding: 14px max(16px, env(safe-area-inset-right))
+             max(16px, env(safe-area-inset-bottom))
+             max(16px, env(safe-area-inset-left));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border: 2px solid var(--ink);
+    border-bottom: 0;
+    border-radius: 18px 18px 0 0;
+    background: var(--sheet);
+    transform: translateY(105%);
+    visibility: hidden;
+    transition: transform 0.25s ease-out, visibility 0s linear 0.25s;
+  }
+  .side .setup.open { transform: none; visibility: visible; transition-delay: 0s; }
+
+  .setup-head {
+    display: flex;
+    grid-column: 1 / -1;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .setup-head h2 { margin: 0; }
+
+  .setup .control { margin: 0; }
+  .setup .control-players,
+  .setup .control-touch,
+  .setup .actions,
+  .setup .rules { grid-column: 1 / -1; }
+
+  .setup .rules { margin-top: 0; }
+
+  /* Comfortable touch targets in the sheet (44px+ tall) */
+  .segmented { display: flex; }
+  .segmented label { flex: 1; }
+  .segmented span { padding: 0.65em 1em; }
+  select { min-height: 44px; }
+  .primary { min-height: 48px; }
+  .rules summary { display: flex; align-items: center; min-height: 44px; }
+}
+
+/* --- Compact + landscape: board on the left, header and players on the right --- */
+@media (orientation: landscape) and (max-width: 880px),
+       (orientation: landscape) and (max-height: 560px) {
+
+  .app {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) clamp(230px, 34vw, 300px);
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: 8px 14px;
+  }
+
+  .masthead { grid-column: 2; grid-row: 1; }
+  .logo { width: 28px; height: 28px; }
+  .masthead h1 { font-size: 1.15rem; white-space: nowrap; }
+  .icon-button .btn-label {         /* icon-only to save width */
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .icon-button { padding: 0; }
+
+  .layout { display: contents; }    /* let .stage and .side join the .app grid */
+  .stage { grid-column: 1; grid-row: 1 / span 2; }
+  .side  { grid-column: 2; grid-row: 2; min-height: 0; overflow-y: auto; }
+
+  .player-list { flex-direction: column; }
+  .player { flex: none; justify-content: stretch; }
+}
+
+/* --- Narrow screens: drop text that doesn't fit --- */
+@media (max-width: 520px) {
+  .wide-only { display: none; }
+
+  .masthead h1 { font-size: 1.35rem; }
+
+  /* Visually hidden but still read by screen readers */
+  .player .name,
+  .status-detail {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .player-list { gap: 4px; }
+  .player {
+    grid-template-columns: auto auto;
+    gap: 5px;
+    padding: 4px 5px;
+  }
+  .player .badge { width: 26px; height: 26px; }
+  .count { font-size: 0.85rem; }
+}
+
+/* --- Very narrow phones (320–360px): trim the header and status row --- */
+@media (max-width: 360px) {
+  .tiny-hide { display: none; }
+
+  .masthead h1 { white-space: nowrap; }
+  .icon-button .btn-label {         /* icon-only button */
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .icon-button { padding: 0; }
+
+  .status { gap: 8px; font-size: 0.95rem; }
+  .status .swatch { width: 28px; height: 28px; }
+}
+
+/* ---------- Animation ---------- */
+
+@keyframes pop        { from { transform: scale(0.3); } to { transform: scale(1); } }
+@keyframes fade-in    { from { opacity: 0; } }
+@keyframes draw       { from { stroke-dashoffset: var(--len); } to { stroke-dashoffset: 0; } }
+@keyframes pulse      { 50% { transform: scale(1.2); } }
+@keyframes aim-pulse  { 50% { stroke-opacity: 0.35; } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
